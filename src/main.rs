@@ -13,7 +13,7 @@ struct Cli {
 enum Actions {
     Show {
         #[arg(short, long)]
-        amount: String,
+        all: bool,
     },
     Start,
     Cmp,
@@ -33,8 +33,15 @@ fn main() {
         }
     };
     match args.actions {
-        Actions::Show { amount } => {
-            println!("show the tasks: {}", amount);
+        Actions::Show { all } => {
+            if all {
+                match get_data(&conn) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        println!("Error: {}", e)
+                    }
+                }
+            }
         }
         Actions::Start => {
             println!("start the task");
@@ -44,7 +51,12 @@ fn main() {
         }
         Actions::Add { data } => {
             println!("adding data");
-            add_data(&conn, data);
+            match add_data(&conn, data) {
+                Ok(c) => c,
+                Err(e) => {
+                    println!("Error: {}", e);
+                }
+            }
         }
     }
 }
