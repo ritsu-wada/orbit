@@ -1,7 +1,9 @@
+use chrono::{DateTime, Local, Utc};
 use rusqlite::{Connection, Result};
 
 struct Task {
     id: i32,
+    deadline: DateTime<Utc>,
     name: String,
     description: Option<String>,
     state: State,
@@ -11,7 +13,6 @@ struct Task {
 enum State {
     Active,
     Complite,
-    Untouched,
     Unknown,
 }
 
@@ -20,6 +21,7 @@ pub fn setup_db() -> Result<Connection> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY,
+            deadline DATETIME NOT NULL,
             name TEXT NOT NULL,
             discription TEXT,
             state TEXT NOT NULL
@@ -30,6 +32,7 @@ pub fn setup_db() -> Result<Connection> {
 }
 
 pub fn add_data(conn: &Connection, name: String) -> Result<()> {
+    // let now = Utc::now();
     conn.execute("INSERT INTO tasks (name) VALUES (?1)", (name,))?;
     Ok(())
 }
@@ -39,14 +42,14 @@ pub fn get_data(conn: &Connection) -> Result<()> {
     let task_iter = stmt.query_map([], |row| {
         Ok(Task {
             id: row.get(0)?,
-            name: row.get(1)?,
-            description: Some(row.get(2)?),
+            deadline: row.get(1)?,
+            name: row.get(2)?,
+            description: Some(row.get(3)?),
             state: {
-                let state_str: String = row.get(3)?;
+                let state_str: String = row.get(4)?;
                 match state_str.as_str() {
                     "active" => State::Active,
                     "complite" => State::Complite,
-                    "Untouched" => State::Untouched,
                     _ => State::Unknown,
                 }
             },
@@ -54,7 +57,10 @@ pub fn get_data(conn: &Connection) -> Result<()> {
     })?;
     for task in task_iter {
         let t = task?;
-        println!("ID: {} Name: {} State: {:?}", t.id, t.name, t.state);
+        println!(
+            "ID: {} DeadLine: {} Name: {} State: {:?}",
+            t.id, t.deadline, t.name, t.state
+        );
         if let Some(desc) = t.description {
             println!("Description: /n {}", desc)
         }
