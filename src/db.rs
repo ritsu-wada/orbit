@@ -1,7 +1,7 @@
 use chrono::{DateTime, Local, Utc};
 use rusqlite::{Connection, Result};
 
-struct Task {
+pub struct Task {
     id: i32,
     deadline: DateTime<Utc>,
     name: String,
@@ -38,7 +38,9 @@ pub fn add_data(conn: &Connection, name: String) -> Result<()> {
 }
 
 pub fn get_data(conn: &Connection) -> Result<()> {
-    let mut stmt = conn.prepare("SELECT id, name, discription, state FROM tasks")?;
+    let mut stmt = conn.prepare(
+        "SELECT id, deadline, name, discription, state FROM tasks ORDER BY deadline DESC",
+    )?;
     let task_iter = stmt.query_map([], |row| {
         Ok(Task {
             id: row.get(0)?,
