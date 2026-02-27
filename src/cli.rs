@@ -1,8 +1,13 @@
+use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 
 use super::db::*;
 
 #[derive(Parser)]
+#[command(
+    name= "tm",
+    after_help = format!("UTC now: {}", Utc::now().to_rfc3339())
+)]
 struct Cli {
     #[command(subcommand)]
     actions: Actions,
@@ -10,20 +15,21 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Actions {
-    Show {
-        #[arg(short, long)]
-        all: bool,
-    },
+    Show,
     Start,
     Cmp,
+    /// タスクの追加
     Add {
+        /// UTC example: 1995-08-25T03:00:00Z (JST,UTC+9) 1995-08-25T03:00:00+09:00
         #[arg(short, long)]
-        data: String,
+        deadline: DateTime<Utc>,
+        /// タスクの内容
+        #[arg(short, long)]
+        content: String,
     },
 }
 
 pub fn parse_cli() {
-    let args = Cli::parse();
     let conn = match setup_db() {
         Ok(c) => c,
         Err(e) => {
@@ -31,14 +37,20 @@ pub fn parse_cli() {
             return;
         }
     };
+    let args = Cli::parse();
     match args.actions {
-        Actions::Show { all } => {
-            if all {
-                match get_data(&conn) {
-                    Ok(c) => c,
-                    Err(e) => {
-                        println!("Error: {}", e)
-                    }
+        Actions::Show => match get_data(&conn) {
+            Ok(c) => c,
+            Err(e) => {
+                println!("Error: {}", e)
+            }
+        },
+        Actions::Add { deadline, content } => {
+            println!("adding data");
+            match add_data(&conn, deadline, content) {
+                Ok(c) => c,
+                Err(e) => {
+                    println!("Error: {}", e);
                 }
             }
         }
@@ -47,15 +59,6 @@ pub fn parse_cli() {
         }
         Actions::Cmp => {
             println!("nice job !");
-        }
-        Actions::Add { data } => {
-            println!("adding data");
-            match add_data(&conn, data) {
-                Ok(c) => c,
-                Err(e) => {
-                    println!("Error: {}", e);
-                }
-            }
         }
     }
 }

@@ -1,11 +1,10 @@
-use chrono::{DateTime, Local, Utc};
+use chrono::{DateTime, Utc};
 use rusqlite::{Connection, Result};
 
 pub struct Task {
     id: i32,
     deadline: DateTime<Utc>,
-    name: String,
-    description: Option<String>,
+    content: String,
     state: State,
 }
 
@@ -22,8 +21,7 @@ pub fn setup_db() -> Result<Connection> {
         "CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY,
             deadline DATETIME NOT NULL,
-            name TEXT NOT NULL,
-            discription TEXT,
+            content TEXT NOT NULL,
             state TEXT NOT NULL
         )",
         (),
@@ -31,24 +29,25 @@ pub fn setup_db() -> Result<Connection> {
     Ok(conn)
 }
 
-pub fn add_data(conn: &Connection, name: String) -> Result<()> {
-    // let now = Utc::now();
-    conn.execute("INSERT INTO tasks (name) VALUES (?1)", (name,))?;
+pub fn add_data(conn: &Connection, deadline: DateTime<Utc>, content: String) -> Result<()> {
+    // 静的ステークホルダー、配列化タプルを渡すことができる
+    conn.execute(
+        "INSERT INTO tasks (deadline, content, state) VALUES (?1,?2,?3)",
+        (deadline, content, "active"),
+    )?;
     Ok(())
 }
 
 pub fn get_data(conn: &Connection) -> Result<()> {
-    let mut stmt = conn.prepare(
-        "SELECT id, deadline, name, discription, state FROM tasks ORDER BY deadline DESC",
-    )?;
+    let mut stmt =
+        conn.prepare("SELECT id, deadline, content, state FROM tasks ORDER BY deadline DESC")?;
     let task_iter = stmt.query_map([], |row| {
         Ok(Task {
             id: row.get(0)?,
             deadline: row.get(1)?,
-            name: row.get(2)?,
-            description: Some(row.get(3)?),
+            content: row.get(2)?,
             state: {
-                let state_str: String = row.get(4)?;
+                let state_str: String = row.get(3)?;
                 match state_str.as_str() {
                     "active" => State::Active,
                     "complite" => State::Complite,
@@ -61,11 +60,8 @@ pub fn get_data(conn: &Connection) -> Result<()> {
         let t = task?;
         println!(
             "ID: {} DeadLine: {} Name: {} State: {:?}",
-            t.id, t.deadline, t.name, t.state
+            t.id, t.deadline, t.content, t.state
         );
-        if let Some(desc) = t.description {
-            println!("Description: /n {}", desc)
-        }
     }
     Ok(())
 }
