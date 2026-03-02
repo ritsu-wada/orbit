@@ -1,5 +1,5 @@
 [package]
-name = "taskmanager"
+name = "nagarestar"
 version = "0.1.0"
 edition = "2024"
 description = "split a task and show have to do now !!!"

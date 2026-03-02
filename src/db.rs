@@ -59,7 +59,7 @@ pub fn get_data(conn: &Connection) -> Result<()> {
     for task in task_iter {
         let t = task?;
         println!(
-            "ID: {} DeadLine: {} Name: {} State: {:?}",
+            "ID: {} DeadLine: {} Content: {} State: {:?}",
             t.id, t.deadline, t.content, t.state
         );
     }

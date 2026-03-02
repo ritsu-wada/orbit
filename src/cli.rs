@@ -5,7 +5,7 @@ use super::db::*;
 
 #[derive(Parser)]
 #[command(
-    name= "tm",
+    name= "wish",
     after_help = format!("UTC now: {}", Utc::now().to_rfc3339())
 )]
 struct Cli {

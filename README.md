@@ -1,12 +1,24 @@
-# TASK management tool
+# 願いを叶えさせてくれるツール
 
-### developping memo
-#### these feature was needed by me :|
-- feature of input
- - Add new tasks
-- feature of save data
- - I thinking to use sqllite
-- feature of output
- - feature of output with table stile
- - feature of putput with clender stile
-- manegment progress of task
+## 大きな願いを分解していき最終的に1時間で終わるものにする。
+
+- 解像度を上げる 願望を動詞に変える
+- IAOで分解する？？→すべてのつくは材料・作業そして結果からなる
+- 1時間で終わるタスクまで分解する
+1時間を単位として、確実に1時間で終わるなら1時間、未知の作業で自身無いなら1時間としておいて内部的に三時間としてみるなどのフラグを使う
+
+## データ構造
+- hope1
+ - pros1
+  - 1our task
+ - pros2
+  - 1our task
+
+- hope2
+ - pros1
+  - 1our task
+ - pros2
+  - 1our task
+
+最終的に1our taskを期限までに終わるように並べる
+
