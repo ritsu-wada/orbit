@@ -20,12 +20,22 @@ enum Actions {
     Cmp,
     /// タスクの追加
     Add {
-        /// UTC example: 1995-08-25T03:00:00Z (JST,UTC+9) 1995-08-25T03:00:00+09:00
+        /// タスクのタイトル
         #[arg(short, long)]
-        deadline: DateTime<Utc>,
-        /// タスクの内容
+        title: String,
+        /// 準備、必要なもの場所
         #[arg(short, long)]
-        content: String,
+        input: String,
+        /// 何をする作業？
+        #[arg(short, long)]
+        action: String,
+        /// 何がゴール？
+        #[arg(short, long)]
+        output: String,
+        /// 1: 確実に1時間で終わる 2: 1時間で終わるだろうが不安 3: 未知の作業
+        #[arg(short, long)]
+        weight: i32,
+        // UTC example: 1995-08-25T03:00:00Z (JST,UTC+9) 1995-08-25T03:00:00+09:00
     },
 }
 
@@ -45,9 +55,16 @@ pub fn parse_cli() {
                 println!("Error: {}", e)
             }
         },
-        Actions::Add { deadline, content } => {
+        Actions::Add {
+            title,
+            input,
+            action,
+            output,
+            weight,
+        } => {
             println!("adding data");
-            match add_data(&conn, deadline, content) {
+            let process_id: i32 = -1; //-1はどこにも属してないものにつける
+            match add_task(&conn, title, input, action, output, weight, process_id) {
                 Ok(c) => c,
                 Err(e) => {
                     println!("Error: {}", e);
