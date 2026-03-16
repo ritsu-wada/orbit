@@ -63,8 +63,7 @@ pub fn parse_cli() {
             weight,
         } => {
             println!("adding data");
-            let process_id: i32 = -1; //-1はどこにも属してないものにつける
-            match add_task(&conn, title, input, action, output, weight, process_id) {
+            match add_task(&conn, title, input, action, output, weight, None) {
                 Ok(c) => c,
                 Err(e) => {
                     println!("Error: {}", e);
