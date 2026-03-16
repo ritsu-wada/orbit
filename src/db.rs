@@ -16,6 +16,7 @@ const TASK_STATE: [&str; 3] = ["Untouched", "Active", "Complete"];
 
 pub fn setup_db() -> Result<Connection> {
     let conn = Connection::open("test.db")?;
+    conn.execute("PRAGMA foreign_keys = ON;", [])?;
     conn.execute(
         "CREATE TABLE IF NOT EXISTS hopes (
             id INTEGER PRIMARY KEY,
@@ -29,6 +30,7 @@ pub fn setup_db() -> Result<Connection> {
         "CREATE TABLE IF NOT EXISTS processes (
             id INTEGER PRIMARY KEY,
             title TEXT NOT NULL,
+            hope_id INTEGER,
             FOREIGN KEY (hope_id) REFERENCES hopes(id) ON DELETE CASCADE
         )",
         (),
@@ -43,7 +45,8 @@ pub fn setup_db() -> Result<Connection> {
             output TEXT NOT NULL,
             weight INTEGER NOT NULL, 
             status TEXT NOT NULL,
-            FOREIGN KEY (processes_id) REFERENCES processes(id) ON DELETE CASCADE
+            process_id INTEGER,
+            FOREIGN KEY (process_id) REFERENCES processes(id) ON DELETE CASCADE
         )",
         (),
     )?;
@@ -65,7 +68,7 @@ pub fn add_task(
 ) -> Result<()> {
     // 静的ステークホルダー、配列化タプルを渡すことができる
     conn.execute(
-        "INSERT INTO tasks (title, input, action, output, weight, status) VALUES (?1,?2,?3,?4,?5,?6,?7)",
+        "INSERT INTO tasks (title, input, action, output, weight, status, process_id) VALUES (?1,?2,?3,?4,?5,?6,?7)",
         (title, input, action, output, weight, 0, process_id),
     )?;
     Ok(())
@@ -73,7 +76,7 @@ pub fn add_task(
 
 pub fn get_data(conn: &Connection) -> Result<()> {
     let mut stmt = conn.prepare(
-        "SELECT id, title, input, action, output, weight, status FROM tasks ORDER BY deadline DESC",
+        "SELECT id, title, input, action, output, weight, status, process_id FROM tasks ORDER BY deadline DESC",
     )?;
     let task_iter = stmt.query_map([], |row| {
         Ok(Task {
