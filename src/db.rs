@@ -44,7 +44,7 @@ pub fn setup_db() -> Result<Connection> {
             action TEXT NOT NULL,
             output TEXT NOT NULL,
             weight INTEGER NOT NULL, 
-            status TEXT NOT NULL,
+            status INTEGER NOT NULL,
             process_id INTEGER,
             FOREIGN KEY (process_id) REFERENCES processes(id) ON DELETE CASCADE
         )",
@@ -76,7 +76,7 @@ pub fn add_task(
 
 pub fn get_data(conn: &Connection) -> Result<()> {
     let mut stmt = conn.prepare(
-        "SELECT id, title, input, action, output, weight, status, process_id FROM tasks ORDER BY deadline DESC",
+        "SELECT id, title, input, action, output, weight, status, process_id FROM tasks ORDER BY status ASC",
     )?;
     let task_iter = stmt.query_map([], |row| {
         Ok(Task {
