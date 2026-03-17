@@ -1,18 +1,18 @@
-use chrono::{DateTime, Utc};
+// use chrono::{DateTime, Utc};
 use rusqlite::{Connection, Result};
 
 pub struct Task {
-    id: i32,
-    title: String,
-    input: String,
-    action: String,
-    output: String,
-    weight: i32,
-    state: i32,
-    process_id: Option<i32>,
+    pub id: i32,
+    pub title: String,
+    pub input: String,
+    pub action: String,
+    pub output: String,
+    pub weight: i32,
+    pub state: i32,
+    pub process_id: Option<i32>,
 }
 
-const TASK_STATE: [&str; 3] = ["Untouched", "Active", "Complete"];
+// const TASK_STATE: [&str; 3] = ["Untouched", "Active", "Complete"];
 
 pub fn setup_db() -> Result<Connection> {
     let conn = Connection::open("test.db")?;
@@ -74,7 +74,7 @@ pub fn add_task(
     Ok(())
 }
 
-pub fn get_data(conn: &Connection) -> Result<()> {
+pub fn get_data(conn: &Connection) -> Result<Vec<Task>> {
     let mut stmt = conn.prepare(
         "SELECT id, title, input, action, output, weight, status, process_id FROM tasks ORDER BY status ASC",
     )?;
@@ -90,12 +90,8 @@ pub fn get_data(conn: &Connection) -> Result<()> {
             process_id: row.get(7)?,
         })
     })?;
-    for task in task_iter {
-        let t = task?;
-        println!(
-            "ID: {} Title: {} Input: {} Action: {} Output: {} Weight: {} State: {}",
-            t.id, t.title, t.input, t.action, t.output, t.weight, t.state,
-        );
-    }
-    Ok(())
+
+    let tasks: Result<Vec<Task>> = task_iter.collect();
+
+    tasks
 }

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use clap::{Parser, Subcommand};
 
 use super::db::*;
@@ -15,7 +15,17 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Actions {
-    Show,
+    Show {
+        /// show all data
+        #[arg(short, long)]
+        all: bool,
+        /// show current tasks only
+        #[arg(short, long)]
+        current: bool,
+        /// show untouched tasks only
+        #[arg(short, long)]
+        untouched: bool,
+    },
     Start,
     Cmp,
     /// タスクの追加
@@ -49,8 +59,44 @@ pub fn parse_cli() {
     };
     let args = Cli::parse();
     match args.actions {
-        Actions::Show => match get_data(&conn) {
-            Ok(c) => c,
+        Actions::Show {
+            all,
+            current,
+            untouched,
+        } => match get_data(&conn) {
+            Ok(tasks) => {
+                // 三回イテレータ回すよりからの変数を作ってmatchで振り分けるほうがいい
+                // けどイテレータの勉強したかったのでこうなった
+                let untouch_task: Vec<&Task> = tasks.iter().filter(|&n| n.state == 0).collect();
+                let active_task: Vec<&Task> = tasks.iter().filter(|&n| n.state == 1).collect();
+                let complete_task: Vec<&Task> = tasks.iter().filter(|&n| n.state == 2).collect();
+                // taskを表示するクロージャを作ってみてる
+                let print_tasks = |task: &Task| {
+                    println!("- ID: {} -", task.id);
+                    println!("Title: {}", task.title);
+                    println!("Input: {}", task.input);
+                    println!("Action: {}", task.action);
+                    println!("Output: {}", task.output);
+                };
+                if !untouched {
+                    println!("= Active =");
+                    for task in active_task {
+                        print_tasks(task);
+                    }
+                }
+                if !current {
+                    println!("= Untouched =");
+                    for task in untouch_task {
+                        print_tasks(task);
+                    }
+                }
+                if all {
+                    println!("= Completed =");
+                    for task in complete_task {
+                        print_tasks(task);
+                    }
+                }
+            }
             Err(e) => {
                 println!("Error: {}", e)
             }
