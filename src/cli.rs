@@ -15,7 +15,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Actions {
-    Show {
+    List {
         /// show all data
         #[arg(short, long)]
         all: bool,
@@ -26,8 +26,16 @@ enum Actions {
         #[arg(short, long)]
         untouched: bool,
     },
-    Start,
-    Cmp,
+    Start {
+        /// your target task's ID
+        #[arg(short, long)]
+        id: i32,
+    },
+    Cmp {
+        /// your target task's ID
+        #[arg(short, long)]
+        id: i32,
+    }, // activeのタスクを完了にする
     /// タスクの追加
     Add {
         /// タスクのタイトル
@@ -59,7 +67,7 @@ pub fn parse_cli() {
     };
     let args = Cli::parse();
     match args.actions {
-        Actions::Show {
+        Actions::List {
             all,
             current,
             untouched,
@@ -67,9 +75,9 @@ pub fn parse_cli() {
             Ok(tasks) => {
                 // 三回イテレータ回すよりからの変数を作ってmatchで振り分けるほうがいい
                 // けどイテレータの勉強したかったのでこうなった
-                let untouch_task: Vec<&Task> = tasks.iter().filter(|&n| n.state == 0).collect();
-                let active_task: Vec<&Task> = tasks.iter().filter(|&n| n.state == 1).collect();
-                let complete_task: Vec<&Task> = tasks.iter().filter(|&n| n.state == 2).collect();
+                let untouch_task: Vec<&Task> = tasks.iter().filter(|&n| n.status == -1).collect();
+                let active_task: Vec<&Task> = tasks.iter().filter(|&n| n.status == 0).collect();
+                let complete_task: Vec<&Task> = tasks.iter().filter(|&n| n.status == 1).collect();
                 // taskを表示するクロージャを作ってみてる
                 let print_tasks = |task: &Task| {
                     println!("- ID: {} -", task.id);
@@ -116,11 +124,23 @@ pub fn parse_cli() {
                 }
             }
         }
-        Actions::Start => {
-            println!("start the task");
-        }
-        Actions::Cmp => {
-            println!("nice job !");
-        }
+        Actions::Start { id } => match update_status(&conn, id, 0) {
+            Ok(c) => {
+                println!("!!! Start a task !!! ID: {}", id);
+                c
+            }
+            Err(e) => {
+                eprintln!("Error: {}", e)
+            }
+        },
+        Actions::Cmp { id } => match update_status(&conn, id, 1) {
+            Ok(c) => {
+                println!("Good job !! You Complete ID: {}", id);
+                c
+            }
+            Err(e) => {
+                eprintln!("Error: {}", e);
+            }
+        },
     }
 }
