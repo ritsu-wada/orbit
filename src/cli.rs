@@ -19,12 +19,6 @@ enum Actions {
         /// show all data
         #[arg(short, long)]
         all: bool,
-        /// show current tasks only
-        #[arg(short, long)]
-        current: bool,
-        /// show untouched tasks only
-        #[arg(short, long)]
-        untouched: bool,
     },
     Start {
         /// your target task's ID
@@ -67,17 +61,12 @@ pub fn parse_cli() {
     };
     let args = Cli::parse();
     match args.actions {
-        Actions::List {
-            all,
-            current,
-            untouched,
-        } => match get_data(&conn) {
+        Actions::List { all } => match get_data(&conn) {
             Ok(tasks) => {
                 // 三回イテレータ回すよりからの変数を作ってmatchで振り分けるほうがいい
                 // けどイテレータの勉強したかったのでこうなった
-                let untouch_task: Vec<&Task> = tasks.iter().filter(|&n| n.status == -1).collect();
-                let active_task: Vec<&Task> = tasks.iter().filter(|&n| n.status == 0).collect();
-                let complete_task: Vec<&Task> = tasks.iter().filter(|&n| n.status == 1).collect();
+                let untouch_task: Vec<&Task> = tasks.iter().filter(|&n| !n.is_done).collect();
+                let complete_task: Vec<&Task> = tasks.iter().filter(|&n| n.is_done).collect();
                 // taskを表示するクロージャを作ってみてる
                 let print_tasks = |task: &Task| {
                     println!("- ID: {} -", task.id);
@@ -85,18 +74,11 @@ pub fn parse_cli() {
                     println!("Input: {}", task.input);
                     println!("Action: {}", task.action);
                     println!("Output: {}", task.output);
+                    println!("flag: {}", task.is_done);
                 };
-                if !untouched {
-                    println!("= Active =");
-                    for task in active_task {
-                        print_tasks(task);
-                    }
-                }
-                if !current {
-                    println!("= Untouched =");
-                    for task in untouch_task {
-                        print_tasks(task);
-                    }
+                println!("= Untouched =");
+                for task in untouch_task {
+                    print_tasks(task);
                 }
                 if all {
                     println!("= Completed =");
@@ -124,16 +106,11 @@ pub fn parse_cli() {
                 }
             }
         }
-        Actions::Start { id } => match update_status(&conn, id, 0) {
-            Ok(c) => {
-                println!("!!! Start a task !!! ID: {}", id);
-                c
-            }
-            Err(e) => {
-                eprintln!("Error: {}", e)
-            }
-        },
-        Actions::Cmp { id } => match update_status(&conn, id, 1) {
+        Actions::Start { id } => {
+            println!("!!! Start a task !!! ID: {}", id);
+            println!("now happend nothing");
+        }
+        Actions::Cmp { id } => match complete_task(&conn, id) {
             Ok(c) => {
                 println!("Good job !! You Complete ID: {}", id);
                 c

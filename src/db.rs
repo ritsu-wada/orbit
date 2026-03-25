@@ -8,7 +8,7 @@ pub struct Task {
     pub action: String,
     pub output: String,
     pub weight: i32,
-    pub status: i32,
+    pub is_done: bool,
     pub process_id: Option<i32>,
 }
 
@@ -44,7 +44,7 @@ pub fn setup_db() -> Result<Connection> {
             action TEXT NOT NULL,
             output TEXT NOT NULL,
             weight INTEGER NOT NULL, 
-            status INTEGER NOT NULL,
+            is_done BOOLEAN NOT NULL DEFAULT 0,
             process_id INTEGER,
             FOREIGN KEY (process_id) REFERENCES processes(id) ON DELETE CASCADE
         )",
@@ -52,7 +52,6 @@ pub fn setup_db() -> Result<Connection> {
     )?;
 
     // weight: タスクの重さ、1~3の三段階、1時間で終わるかの自信度
-    // status: 完了済み、取り組み中、未着手に分けたい,
 
     Ok(conn)
 }
@@ -68,15 +67,15 @@ pub fn add_task(
 ) -> Result<()> {
     // 静的ステークホルダー、配列化タプルを渡すことができる
     conn.execute(
-        "INSERT INTO tasks (title, input, action, output, weight, status, process_id) VALUES (?1,?2,?3,?4,?5,?6,?7)",
-        (title, input, action, output, weight, -1, process_id),
+        "INSERT INTO tasks (title, input, action, output, weight, process_id) VALUES (?1,?2,?3,?4,?5,?6)",
+        (title, input, action, output, weight, process_id),
     )?;
     Ok(())
 }
 
 pub fn get_data(conn: &Connection) -> Result<Vec<Task>> {
     let mut stmt = conn.prepare(
-        "SELECT id, title, input, action, output, weight, status, process_id FROM tasks ORDER BY status ASC",
+        "SELECT id, title, input, action, output, weight, is_done, process_id FROM tasks ORDER BY is_done ASC",
     )?;
     let task_iter = stmt.query_map([], |row| {
         Ok(Task {
@@ -86,7 +85,7 @@ pub fn get_data(conn: &Connection) -> Result<Vec<Task>> {
             action: row.get(3)?,
             output: row.get(4)?,
             weight: row.get(5)?,
-            status: row.get(6)?,
+            is_done: row.get(6)?,
             process_id: row.get(7)?,
         })
     })?;
@@ -96,11 +95,8 @@ pub fn get_data(conn: &Connection) -> Result<Vec<Task>> {
     tasks
 }
 
-pub fn update_status(conn: &Connection, id: i32, status: i32) -> Result<()> {
-    conn.execute(
-        "UPDATE tasks SET status = (?1) WHERE id = (?2)",
-        (status, id),
-    )?;
+pub fn complete_task(conn: &Connection, id: i32) -> Result<()> {
+    conn.execute("UPDATE tasks SET is_done = 1 WHERE id = (?1)", (id,))?;
     Ok(())
 }
 
