@@ -49,6 +49,12 @@ enum Actions {
         weight: i32,
         // UTC example: 1995-08-25T03:00:00Z (JST,UTC+9) 1995-08-25T03:00:00+09:00
     },
+    ///タスク削除
+    Delete {
+        /// your target task's ID
+        #[arg(short, long)]
+        id: i32,
+    },
 }
 
 pub fn parse_cli() {
@@ -113,6 +119,15 @@ pub fn parse_cli() {
         Actions::Cmp { id } => match complete_task(&conn, id) {
             Ok(c) => {
                 println!("Good job !! You Complete ID: {}", id);
+                c
+            }
+            Err(e) => {
+                eprintln!("Error: {}", e);
+            }
+        },
+        Actions::Delete { id } => match delete_task(&conn, id) {
+            Ok(c) => {
+                println!("Deleted task ID: {}", id);
                 c
             }
             Err(e) => {

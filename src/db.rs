@@ -100,6 +100,11 @@ pub fn complete_task(conn: &Connection, id: i32) -> Result<()> {
     Ok(())
 }
 
+pub fn delete_task(conn: &Connection, id: i32) -> Result<()> {
+    conn.execute("DELETE FROM tasks WHERE id = (?1)", (id,))?;
+    Ok(())
+}
+
 // pub fn update_data(
 //     conn: &Connection,
 //     id: i32,
