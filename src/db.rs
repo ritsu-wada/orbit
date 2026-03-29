@@ -73,7 +73,7 @@ pub fn add_task(
     Ok(())
 }
 
-pub fn get_data(conn: &Connection) -> Result<Vec<Task>> {
+pub fn get_tasks(conn: &Connection) -> Result<Vec<Task>> {
     let mut stmt = conn.prepare(
         "SELECT id, title, input, action, output, weight, is_done, process_id FROM tasks ORDER BY is_done ASC",
     )?;
@@ -104,18 +104,3 @@ pub fn delete_task(conn: &Connection, id: i32) -> Result<()> {
     conn.execute("DELETE FROM tasks WHERE id = (?1)", (id,))?;
     Ok(())
 }
-
-// pub fn update_data(
-//     conn: &Connection,
-//     id: i32,
-//     title: String,
-//     input: String,
-//     action: String,
-//     output: String,
-//     weight: i32,
-// ) -> Result<()> {
-//     conn.execute("UPDATE tasks SET (?1) = (?2) WHERE id = (?3)", (
-
-//     ))?;
-//     Ok(())
-// }
