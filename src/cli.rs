@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 
 use super::db::*;
@@ -15,22 +15,59 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Targets {
+    /// action of hope
     Hope {
         #[command(subcommand)]
-        actions: Actions,
+        actions: HopeActions,
     },
+    /// action of process
     Process {
         #[command(subcommand)]
-        actions: Actions,
+        actions: ProcessActions,
     },
+    /// action of task
     Task {
         #[command(subcommand)]
-        actions: Actions,
+        actions: TaskActions,
     },
 }
 
 #[derive(Subcommand)]
-enum Actions {
+enum ProcessActions {
+    /// add process
+    Add {
+        #[arg(short, long)]
+        title: String,
+        #[arg(short, long)]
+        hope_id: i32,
+    },
+    List,
+    Delete {
+        #[arg(short, long)]
+        id: i32,
+    },
+}
+
+#[derive(Subcommand)]
+enum HopeActions {
+    /// add process
+    Add {
+        #[arg(short, long)]
+        title: String,
+        /// UTC
+        #[arg(short, long)]
+        deadline: DateTime<Utc>,
+    },
+    List,
+    Delete {
+        #[arg(short, long)]
+        id: i32,
+    },
+}
+
+#[derive(Subcommand)]
+enum TaskActions {
+    /// show list of tasks
     List {
         /// show all data
         #[arg(short, long)]
@@ -41,6 +78,7 @@ enum Actions {
         #[arg(short, long)]
         id: i32,
     },
+    /// change to state complete
     Cmp {
         /// your target task's ID
         #[arg(short, long)]
@@ -85,7 +123,7 @@ pub fn parse_cli() {
     let args = Cli::parse();
     match args.targets {
         Targets::Task { actions } => match actions {
-            Actions::List { all } => match get_tasks(&conn) {
+            TaskActions::List { all } => match get_tasks(&conn) {
                 Ok(tasks) => {
                     // 三回イテレータ回すよりからの変数を作ってmatchで振り分けるほうがいい
                     // けどイテレータの勉強したかったのでこうなった
@@ -114,27 +152,27 @@ pub fn parse_cli() {
                     println!("Error: {}", e)
                 }
             },
-            Actions::Add {
+            TaskActions::Add {
                 title,
                 input,
                 action,
                 output,
                 weight,
                 process_id,
-            } => {
-                println!("adding data");
-                match add_task(&conn, title, input, action, output, weight, process_id) {
-                    Ok(c) => c,
-                    Err(e) => {
-                        println!("Error: {}", e);
-                    }
+            } => match add_task(&conn, title, input, action, output, weight, process_id) {
+                Ok(c) => {
+                    println!("adding data");
+                    c
                 }
-            }
-            Actions::Start { id } => {
+                Err(e) => {
+                    println!("Error: {}", e);
+                }
+            },
+            TaskActions::Start { id } => {
                 println!("!!! Start a task !!! ID: {}", id);
                 println!("now happend nothing");
             }
-            Actions::Cmp { id } => match complete_task(&conn, id) {
+            TaskActions::Cmp { id } => match complete_task(&conn, id) {
                 Ok(c) => {
                     println!("Good job !! You Complete ID: {}", id);
                     c
@@ -143,7 +181,7 @@ pub fn parse_cli() {
                     eprintln!("Error: {}", e);
                 }
             },
-            Actions::Delete { id } => match delete_task(&conn, id) {
+            TaskActions::Delete { id } => match delete_task(&conn, id) {
                 Ok(c) => {
                     println!("Deleted task ID: {}", id);
                     c
@@ -153,7 +191,69 @@ pub fn parse_cli() {
                 }
             },
         },
-        Targets::Process { actions } => {}
-        Targets::Hope { actions } => {}
+        Targets::Process { actions } => match actions {
+            ProcessActions::Add { title, hope_id } => match add_process(&conn, title, hope_id) {
+                Ok(c) => {
+                    println!("Add process");
+                    c
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                }
+            },
+            ProcessActions::List => match get_process(&conn) {
+                Ok(processes) => {
+                    for process in processes {
+                        print!("ID: {}", process.id);
+                        print!("Title: {}", process.title);
+                        print!("hope_id: {}", process.hope_id);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                }
+            },
+            ProcessActions::Delete { id } => match delete_process(&conn, id) {
+                Ok(c) => {
+                    println!("Delete process ID: {}", id);
+                    c
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                }
+            },
+        },
+        Targets::Hope { actions } => match actions {
+            HopeActions::Add { title, deadline } => match add_hope(&conn, title, deadline) {
+                Ok(c) => {
+                    println!("Add hope");
+                    c
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                }
+            },
+            HopeActions::List => match get_hopes(&conn) {
+                Ok(hopes) => {
+                    for hope in hopes {
+                        println!("ID: {}", hope.id);
+                        println!("Title: {}", hope.title);
+                        println!("DeadLine: {}", hope.deadline);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                }
+            },
+            HopeActions::Delete { id } => match delete_hope(&conn, id) {
+                Ok(c) => {
+                    println!("Delete hope ID: {}", id);
+                    c
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                }
+            },
+        },
     }
 }

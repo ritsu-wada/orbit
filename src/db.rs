@@ -1,5 +1,17 @@
-// use chrono::{DateTime, Utc};
+use chrono::prelude::*;
 use rusqlite::{Connection, Result};
+
+pub struct Hope {
+    pub id: i32,
+    pub title: String,
+    pub deadline: DateTime<Utc>,
+}
+
+pub struct Process {
+    pub id: i32,
+    pub title: String,
+    pub hope_id: i32,
+}
 
 pub struct Task {
     pub id: i32,
@@ -56,6 +68,22 @@ pub fn setup_db() -> Result<Connection> {
     Ok(conn)
 }
 
+pub fn add_hope(conn: &Connection, title: String, deadline: DateTime<Utc>) -> Result<()> {
+    conn.execute(
+        "INSERT INTO hopes (title, deadline) VALUES (?1, ?2)",
+        (title, deadline),
+    )?;
+    Ok(())
+}
+
+pub fn add_process(conn: &Connection, title: String, hope_id: i32) -> Result<()> {
+    conn.execute(
+        "INSERT INTO processes (id, title, hope_id) VALUES (?1, ?2)",
+        (title, hope_id),
+    )?;
+    Ok(())
+}
+
 pub fn add_task(
     conn: &Connection,
     title: String,
@@ -95,6 +123,36 @@ pub fn get_tasks(conn: &Connection) -> Result<Vec<Task>> {
     tasks
 }
 
+pub fn get_process(conn: &Connection) -> Result<Vec<Process>> {
+    let mut stmt = conn.prepare("SELECT id, title, hope_id FROM processes ORDER BY hope_id ASC")?;
+    let process_iter = stmt.query_map([], |row| {
+        Ok(Process {
+            id: row.get(0)?,
+            title: row.get(1)?,
+            hope_id: row.get(2)?,
+        })
+    })?;
+
+    let processes: Result<Vec<Process>> = process_iter.collect();
+
+    processes
+}
+
+pub fn get_hopes(conn: &Connection) -> Result<Vec<Hope>> {
+    let mut stmt = conn.prepare("SELECT id, title, deadline FROM hopes ORDER BY hope_id ASC")?;
+    let hope_iter = stmt.query_map([], |row| {
+        Ok(Hope {
+            id: row.get(0)?,
+            title: row.get(1)?,
+            deadline: row.get(2)?,
+        })
+    })?;
+
+    let hopes: Result<Vec<Hope>> = hope_iter.collect();
+
+    hopes
+}
+
 pub fn complete_task(conn: &Connection, id: i32) -> Result<()> {
     conn.execute("UPDATE tasks SET is_done = 1 WHERE id = (?1)", (id,))?;
     Ok(())
@@ -102,5 +160,13 @@ pub fn complete_task(conn: &Connection, id: i32) -> Result<()> {
 
 pub fn delete_task(conn: &Connection, id: i32) -> Result<()> {
     conn.execute("DELETE FROM tasks WHERE id = (?1)", (id,))?;
+    Ok(())
+}
+pub fn delete_process(conn: &Connection, id: i32) -> Result<()> {
+    conn.execute("DELETE FROM processes WHERE id = (?1)", (id,))?;
+    Ok(())
+}
+pub fn delete_hope(conn: &Connection, id: i32) -> Result<()> {
+    conn.execute("DELETE FROM hopes WHERE id = (?1)", (id,))?;
     Ok(())
 }
