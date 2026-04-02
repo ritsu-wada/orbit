@@ -139,7 +139,7 @@ pub fn get_process(conn: &Connection) -> Result<Vec<Process>> {
 }
 
 pub fn get_hopes(conn: &Connection) -> Result<Vec<Hope>> {
-    let mut stmt = conn.prepare("SELECT id, title, deadline FROM hopes ORDER BY hope_id ASC")?;
+    let mut stmt = conn.prepare("SELECT id, title, deadline FROM hopes ORDER BY deadline ASC")?;
     let hope_iter = stmt.query_map([], |row| {
         Ok(Hope {
             id: row.get(0)?,
