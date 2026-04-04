@@ -78,7 +78,7 @@ pub fn add_hope(conn: &Connection, title: String, deadline: DateTime<Utc>) -> Re
 
 pub fn add_process(conn: &Connection, title: String, hope_id: i32) -> Result<()> {
     conn.execute(
-        "INSERT INTO processes (id, title, hope_id) VALUES (?1, ?2)",
+        "INSERT INTO processes (title, hope_id) VALUES (?1, ?2)",
         (title, hope_id),
     )?;
     Ok(())

@@ -31,16 +31,18 @@ enum Actions {
         #[arg(short, long)]
         deadline: DateTime<Utc>,
     },
-    #[command(alias = "ap")]
     /// add process
+    #[command(alias = "ap")]
     AddProcess {
+        /// the process's title
         #[arg(short, long)]
         title: String,
+        /// related hope's ID
         #[arg(short, long)]
-        hope_id: i32,
+        id: i32,
     },
-    #[command(alias = "at")]
     /// タスクの追加
+    #[command(alias = "at")]
     AddTask {
         /// タスクのタイトル
         #[arg(short, long)]
@@ -57,8 +59,9 @@ enum Actions {
         /// 1: 確実に1時間で終わる 2: 1時間で終わるだろうが不安 3: 未知の作業
         #[arg(short, long, default_value_t = 1)]
         weight: i32,
+        /// related Process's ID
         #[arg(short, long)]
-        process_id: Option<i32>,
+        id: Option<i32>,
     },
     Start {
         /// your target task's ID
@@ -71,22 +74,22 @@ enum Actions {
         #[arg(short, long)]
         id: i32,
     },
-    #[command(alias = "dh")]
     /// delete hopes
+    #[command(alias = "dh")]
     DeleteHope {
         /// your target's ID
         #[arg(short, long)]
         id: i32,
     },
-    #[command(alias = "dp")]
     /// delete process
+    #[command(alias = "dp")]
     DeleteProcess {
         /// your target's ID
         #[arg(short, long)]
         id: i32,
     },
+    /// delete task
     #[command(alias = "dt")]
-    ///タスク削除
     DeleteTask {
         /// your target task's ID
         #[arg(short, long)]
@@ -105,35 +108,65 @@ pub fn parse_cli() {
     let args = Cli::parse();
     match args.actions {
         // need to change
-        Actions::List { all } => match get_tasks(&conn) {
-            Ok(tasks) => {
-                // 三回イテレータ回すよりからの変数を作ってmatchで振り分けるほうがいい
-                // けどイテレータの勉強したかったのでこうなった
-                let untouch_task: Vec<&Task> = tasks.iter().filter(|&n| !n.is_done).collect();
-                let complete_task: Vec<&Task> = tasks.iter().filter(|&n| n.is_done).collect();
-                // taskを表示するクロージャを作ってみてる
-                let print_tasks = |task: &Task| {
-                    println!("- ID: {} -", task.id);
-                    println!("Title: {}", task.title);
-                    println!("Input: {}", task.input);
-                    println!("Action: {}", task.action);
-                    println!("Output: {}", task.output);
+        Actions::List { all } => {
+            if all {
+                let hopes: Vec<Hope> = match get_hopes(&conn) {
+                    Ok(hopes) => hopes,
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        Vec::new()
+                    }
                 };
-                println!("= Untouched =");
-                for task in untouch_task {
-                    print_tasks(task);
-                }
-                if all {
-                    println!("= Completed =");
-                    for task in complete_task {
-                        print_tasks(task);
+                let processes: Vec<Process> = match get_process(&conn) {
+                    Ok(process) => process,
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        Vec::new()
+                    }
+                };
+                let tasks: Vec<Task> = match get_tasks(&conn) {
+                    Ok(tasks) => tasks,
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        Vec::new()
+                    }
+                };
+                let print_tasks = |task: &Task| {
+                    println!("　　├─[Task] ID: {} -", task.id);
+                    println!("　　│  Title: {}", task.title);
+                    println!("　　│  Input: {}", task.input);
+                    println!("　　│  Action: {}", task.action);
+                    println!("　　└  Output: {}", task.output);
+                };
+                for hope in &hopes {
+                    println!("[Hope ID:{}] ", hope.id);
+                    println!(" TITLE: {} ", hope.title);
+                    let related_processes: Vec<&Process> =
+                        processes.iter().filter(|t| t.hope_id == hope.id).collect();
+
+                    for process in related_processes {
+                        println!("　├─[Process] ID: {}", process.id);
+                        println!("　└  Title: {}", process.title);
+                        let related_tasks: Vec<&Task> = tasks
+                            .iter()
+                            .filter(|t| t.process_id == Some(process.id))
+                            .collect();
+
+                        for task in &related_tasks {
+                            print_tasks(&task);
+                        }
                     }
                 }
+                println!("=== Standalone Tasks ===");
+                let standalone_tasks: Vec<&Task> =
+                    tasks.iter().filter(|t| t.process_id == None).collect();
+                for task in standalone_tasks {
+                    print_tasks(&task);
+                }
+            } else {
+                println!("Sorry I need --all or -a option to show data");
             }
-            Err(e) => {
-                println!("Error: {}", e)
-            }
-        },
+        }
         // need to change
         Actions::AddHope { title, deadline } => match add_hope(&conn, title, deadline) {
             Ok(c) => {
@@ -144,7 +177,7 @@ pub fn parse_cli() {
                 eprintln!("Error: {}", e);
             }
         },
-        Actions::AddProcess { title, hope_id } => match add_process(&conn, title, hope_id) {
+        Actions::AddProcess { title, id } => match add_process(&conn, title, id) {
             Ok(c) => {
                 println!("Add process");
                 c
@@ -159,8 +192,8 @@ pub fn parse_cli() {
             action,
             output,
             weight,
-            process_id,
-        } => match add_task(&conn, title, input, action, output, weight, process_id) {
+            id,
+        } => match add_task(&conn, title, input, action, output, weight, id) {
             Ok(c) => {
                 println!("adding data");
                 c
