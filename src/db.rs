@@ -1,28 +1,7 @@
 use chrono::prelude::*;
 use rusqlite::{Connection, Result};
 
-pub struct Hope {
-    pub id: i32,
-    pub title: String,
-    pub deadline: DateTime<Utc>,
-}
-
-pub struct Process {
-    pub id: i32,
-    pub title: String,
-    pub hope_id: i32,
-}
-
-pub struct Task {
-    pub id: i32,
-    pub title: String,
-    pub input: String,
-    pub action: String,
-    pub output: String,
-    pub weight: i32,
-    pub is_done: bool,
-    pub process_id: Option<i32>,
-}
+use super::models::*;
 
 // const TASK_STATE: [&str; 3] = ["Untouched", "Active", "Complete"];
 
@@ -57,6 +36,7 @@ pub fn setup_db() -> Result<Connection> {
             output TEXT NOT NULL,
             weight INTEGER NOT NULL, 
             is_done BOOLEAN NOT NULL DEFAULT 0,
+            hope_id INTEGER,
             process_id INTEGER,
             FOREIGN KEY (process_id) REFERENCES processes(id) ON DELETE CASCADE
         )",
@@ -64,11 +44,10 @@ pub fn setup_db() -> Result<Connection> {
     )?;
 
     // weight: タスクの重さ、1~3の三段階、1時間で終わるかの自信度
-
     Ok(conn)
 }
 
-pub fn add_hope(conn: &Connection, title: String, deadline: DateTime<Utc>) -> Result<()> {
+pub fn add_hope(conn: &Connection, title: String, deadline: NaiveDate) -> Result<()> {
     conn.execute(
         "INSERT INTO hopes (title, deadline) VALUES (?1, ?2)",
         (title, deadline),
@@ -91,6 +70,7 @@ pub fn add_task(
     action: String,
     output: String,
     weight: i32,
+    hope_id: Option<i32>,
     process_id: Option<i32>,
 ) -> Result<()> {
     // 静的ステークホルダー、配列化タプルを渡すことができる
@@ -103,7 +83,7 @@ pub fn add_task(
 
 pub fn get_tasks(conn: &Connection) -> Result<Vec<Task>> {
     let mut stmt = conn.prepare(
-        "SELECT id, title, input, action, output, weight, is_done, process_id FROM tasks ORDER BY is_done ASC",
+        "SELECT id, title, input, action, output, weight, is_done, hope_id, process_id FROM tasks ORDER BY is_done ASC",
     )?;
     let task_iter = stmt.query_map([], |row| {
         Ok(Task {
@@ -114,12 +94,11 @@ pub fn get_tasks(conn: &Connection) -> Result<Vec<Task>> {
             output: row.get(4)?,
             weight: row.get(5)?,
             is_done: row.get(6)?,
-            process_id: row.get(7)?,
+            hope_id: row.get(7)?,
+            process_id: row.get(8)?,
         })
     })?;
-
     let tasks: Result<Vec<Task>> = task_iter.collect();
-
     tasks
 }
 
