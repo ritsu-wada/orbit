@@ -28,7 +28,7 @@ use super::models::*;
 //     };
 // }
 
-pub fn make_block(conn: &Connection) -> Vec<Block> {
+pub fn make_tree(conn: &Connection) -> Vec<HopeBlock> {
     let hopes: Vec<Hope> = match get_hopes(&conn) {
         Ok(hopes) => hopes,
         Err(e) => {
@@ -51,7 +51,7 @@ pub fn make_block(conn: &Connection) -> Vec<Block> {
         }
     };
 
-    let blocks: Vec<Block> = hopes
+    let blocks: Vec<HopeBlock> = hopes
         .into_iter()
         .map(|hope| {
             let hope_id = hope.id;
@@ -60,18 +60,36 @@ pub fn make_block(conn: &Connection) -> Vec<Block> {
                 .filter(|p| p.hope_id == hope_id)
                 .cloned()
                 .collect();
+
+            let process_block: Vec<ProcessBlock> = related_processes
+                .into_iter()
+                .map(|process| {
+                    let process_id = process.id;
+                    let related_task: Vec<Task> = tasks
+                        .iter()
+                        .filter(|t| t.process_id == Some(process_id))
+                        .cloned()
+                        .collect();
+                    ProcessBlock {
+                        process: process,
+                        tasks: related_task,
+                    }
+                })
+                .collect();
+
             let related_tasks: Vec<Task> = tasks
                 .iter()
                 .filter(|t| t.hope_id == Some(hope.id))
                 .cloned()
                 .collect();
-            Block {
+
+            HopeBlock {
                 hope,
-                process: related_processes,
-                task: related_tasks,
+                process: process_block,
+                tasks: related_tasks,
             }
         })
         .collect();
-    eprintln!("processに基づいているタスクをひょうじできてない！");
+
     blocks
 }

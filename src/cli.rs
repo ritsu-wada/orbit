@@ -99,7 +99,7 @@ pub enum Actions {
     },
 }
 
-pub fn print_all_task(blocks: Vec<Block>) {
+pub fn print_all_task(blocks: Vec<HopeBlock>) {
     let print_related_tasks = |task: &Task| {
         println!("　　├─[Task] ID: {} -", task.id);
         println!("　　│  Title: {}", task.title);
@@ -107,7 +107,7 @@ pub fn print_all_task(blocks: Vec<Block>) {
         println!("　　│  Action: {}", task.action);
         println!("　　└  Output: {}", task.output);
     };
-    let print_block = |block: &Block| {
+    let hope_block = |block: &HopeBlock| {
         println!("[Hope ID:{}]:", block.hope.id);
         println!(" DeadLine: {}", block.hope.deadline);
         println!(" TITLE: {}", block.hope.title);
@@ -117,7 +117,16 @@ pub fn print_all_task(blocks: Vec<Block>) {
         println!("　└  Title: {}", process.title);
     };
     for block in blocks {
-        print_block(&block);
+        hope_block(&block);
+        for process_block in block.process {
+            print_process(&process_block.process);
+            for task in process_block.tasks {
+                print_related_tasks(&task);
+            }
+        }
+        for task in block.tasks {
+            print_related_tasks(&task);
+        }
     }
 }
 

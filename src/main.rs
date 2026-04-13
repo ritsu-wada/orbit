@@ -21,7 +21,7 @@ fn main() {
         // need to change
         Actions::List { all } => {
             if all {
-                let blocks = make_block(&conn);
+                let blocks = make_tree(&conn);
                 print_all_task(blocks);
             } else {
                 println!("Sorry I need --all or -a option to show data");

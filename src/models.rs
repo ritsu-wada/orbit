@@ -28,8 +28,14 @@ pub struct Task {
 }
 
 #[derive(Clone)]
-pub struct Block {
+pub struct HopeBlock {
     pub hope: Hope,
-    pub process: Vec<Process>,
-    pub task: Vec<Task>,
+    pub process: Vec<ProcessBlock>,
+    pub tasks: Vec<Task>,
+}
+
+#[derive(Clone)]
+pub struct ProcessBlock {
+    pub process: Process,
+    pub tasks: Vec<Task>,
 }
