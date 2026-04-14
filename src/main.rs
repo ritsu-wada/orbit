@@ -19,10 +19,15 @@ fn main() {
     let args = Cli::parse();
     match args.actions {
         // need to change
-        Actions::List { all } => {
+        Actions::List { all, include_done } => {
             if all {
-                let blocks = make_tree(&conn);
-                print_all_task(blocks);
+                let mut tree = make_tree(&conn);
+                if !include_done {
+                    eliminate_done(&mut tree);
+                }
+                print_all_task(tree);
+                let standalone_tasks = get_standalone_tasks(&conn);
+                print_standalone_tasks(standalone_tasks);
             } else {
                 println!("Sorry I need --all or -a option to show data");
             }

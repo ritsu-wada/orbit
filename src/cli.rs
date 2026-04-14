@@ -21,6 +21,9 @@ pub enum Actions {
         /// show all data
         #[arg(short, long)]
         all: bool,
+        ///  includ done tasks
+        #[arg(short, long)]
+        include_done: bool,
     },
     /// add hope
     #[command(alias = "ah")]
@@ -99,7 +102,7 @@ pub enum Actions {
     },
 }
 
-pub fn print_all_task(blocks: Vec<HopeBlock>) {
+pub fn print_all_task(tree: Vec<HopeBlock>) {
     let print_related_tasks = |task: &Task| {
         println!("　　├─[Task] ID: {} -", task.id);
         println!("　　│  Title: {}", task.title);
@@ -107,7 +110,7 @@ pub fn print_all_task(blocks: Vec<HopeBlock>) {
         println!("　　│  Action: {}", task.action);
         println!("　　└  Output: {}", task.output);
     };
-    let hope_block = |block: &HopeBlock| {
+    let print_hope_block = |block: &HopeBlock| {
         println!("[Hope ID:{}]:", block.hope.id);
         println!(" DeadLine: {}", block.hope.deadline);
         println!(" TITLE: {}", block.hope.title);
@@ -116,8 +119,8 @@ pub fn print_all_task(blocks: Vec<HopeBlock>) {
         println!("　├─[Process] ID: {}", process.id);
         println!("　└  Title: {}", process.title);
     };
-    for block in blocks {
-        hope_block(&block);
+    for block in tree {
+        print_hope_block(&block);
         for process_block in block.process {
             print_process(&process_block.process);
             for task in process_block.tasks {
@@ -130,13 +133,16 @@ pub fn print_all_task(blocks: Vec<HopeBlock>) {
     }
 }
 
-// fn print_standalone_tasks() {
-//     println!("=== Standalone Tasks ===");
-//     let print_standalone_task = |task: &Task| {
-//         println!("┌─[Task] ID: {} -", task.id);
-//         println!("│  Title: {}", task.title);
-//         println!("│  Input: {}", task.input);
-//         println!("│  Action: {}", task.action);
-//         println!("└  Output: {}", task.output);
-//     };
-// }
+pub fn print_standalone_tasks(tasks: Vec<Task>) {
+    println!("=== Standalone Tasks ===");
+    let print_standalone_task = |task: &Task| {
+        println!("┌─[Task] ID: {} -", task.id);
+        println!("│  Title: {}", task.title);
+        println!("│  Input: {}", task.input);
+        println!("│  Action: {}", task.action);
+        println!("└  Output: {}", task.output);
+    };
+    for task in tasks.into_iter() {
+        print_standalone_task(&task);
+    }
+}
