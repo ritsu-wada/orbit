@@ -19,19 +19,32 @@ fn main() {
     let args = Cli::parse();
     match args.actions {
         // need to change
-        Actions::List { all, include_done } => {
-            if all {
-                let mut tree = make_tree(&conn);
-                if !include_done {
-                    eliminate_done(&mut tree);
+        Actions::List { target } => match target {
+            Target::Hope { id } => match id {
+                Some(value) => {
+                    println!("print hope id = {}", value);
                 }
+                None => match get_hopes(&conn) {
+                    Ok(hope_vec) => print_hope_list(hope_vec),
+                    Err(e) => {
+                        println!("Error: {}", e);
+                    }
+                },
+            },
+            Target::All => {
+                let tree = make_tree(&conn);
                 print_all_task(tree);
                 let standalone_tasks = get_standalone_tasks(&conn);
                 print_standalone_tasks(standalone_tasks);
-            } else {
-                println!("Sorry I need --all or -a option to show data");
             }
-        }
+            _ => {
+                let mut tree = make_tree(&conn);
+                eliminate_done(&mut tree);
+                print_all_task(tree);
+                let standalone_tasks = get_standalone_tasks(&conn);
+                print_standalone_tasks(standalone_tasks);
+            }
+        },
         // need to change
         Actions::AddHope { title, deadline } => match add_hope(&conn, title, deadline) {
             Ok(c) => {
@@ -57,11 +70,9 @@ fn main() {
             action,
             output,
             weight,
-            hope_id,
-            process_id,
-        } => match add_task(
-            &conn, title, input, action, output, weight, hope_id, process_id,
-        ) {
+            h_id,
+            p_id,
+        } => match add_task(&conn, title, input, action, output, weight, h_id, p_id) {
             Ok(c) => {
                 println!("adding data");
                 c
@@ -83,31 +94,46 @@ fn main() {
                 eprintln!("Error: {}", e);
             }
         },
-        Actions::DeleteHope { id } => match delete_hope(&conn, id) {
-            Ok(c) => {
-                println!("Delete hope ID: {}", id);
-                c
-            }
-            Err(e) => {
-                eprintln!("Error: {}", e);
-            }
-        },
-        Actions::DeleteProcess { id } => match delete_process(&conn, id) {
-            Ok(c) => {
-                println!("Delete process ID: {}", id);
-                c
-            }
-            Err(e) => {
-                eprintln!("Error: {}", e);
-            }
-        },
-        Actions::DeleteTask { id } => match delete_task(&conn, id) {
-            Ok(c) => {
-                println!("Deleted task ID: {}", id);
-                c
-            }
-            Err(e) => {
-                eprintln!("Error: {}", e);
+        Actions::Delete { target } => match target {
+            Target::Hope { id } => match id {
+                Some(value) => match delete_hope(&conn, value) {
+                    Ok(c) => {
+                        println!("Delete hope ID: {}", value);
+                        c
+                    }
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                    }
+                },
+                None => {}
+            },
+            Target::Process { id } => match id {
+                Some(value) => match delete_process(&conn, value) {
+                    Ok(c) => {
+                        println!("Delete process ID: {}", value);
+                        c
+                    }
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                    }
+                },
+                None => {}
+            },
+            Target::Task { id } => match id {
+                Some(value) => match delete_task(&conn, value) {
+                    Ok(c) => {
+                        println!("Deleted task ID: {}", value);
+                        c
+                    }
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                    }
+                },
+                None => {}
+            },
+            Target::All => {
+                println!("Are you Ok ? you wanna to delete all data??");
+                println!("Sorry I cant sport that function")
             }
         },
     }

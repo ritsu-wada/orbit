@@ -4,15 +4,22 @@ use rusqlite::Connection;
 use super::db::*;
 use super::models::*;
 
-// fn make_today_list(conn: &Connection, tree: Vec<HopeBlock>)-> Vec<HopeBlock> {
-
+// fn make_today_list(mut tree: Vec<HopeBlock>) -> Vec<Task> {
+//     eliminate_done(&mut tree);
+//     let today: NaiveDate = Local::now().date_naive();
+//     let todays_task: Vec<Task> = tree.iter().;
+//     for hope_block in tree {
+//         let deadline: NaiveDate = hope_block.hope.deadline;
+//         let duration = deadline.signed_duration_since(today);
+//     }
+//     todays_task
 // }
 
 pub fn eliminate_done(tree: &mut Vec<HopeBlock>) {
     for hope_block in tree.into_iter() {
-        hope_block.tasks.retain(|t| t.is_done);
+        hope_block.tasks.retain(|t| !t.is_done);
         for process_block in &mut hope_block.process {
-            process_block.tasks.retain(|t| t.is_done);
+            process_block.tasks.retain(|t| !t.is_done);
         }
     }
 }

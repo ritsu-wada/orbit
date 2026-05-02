@@ -75,7 +75,7 @@ pub fn add_task(
 ) -> Result<()> {
     // 静的ステークホルダー、配列化タプルを渡すことができる
     conn.execute(
-        "INSERT INTO tasks (title, input, action, output, weight, hope_id, process_id) VALUES (?1,?2,?3,?4,?5,?6)",
+        "INSERT INTO tasks (title, input, action, output, weight, hope_id, process_id) VALUES (?1,?2,?3,?4,?5,?6,?7)",
         (title, input, action, output, weight, hope_id, process_id),
     )?;
     Ok(())

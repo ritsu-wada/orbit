@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, Utc};
+use chrono::*;
 use clap::{Parser, Subcommand};
 
 use crate::models::*;
@@ -6,7 +6,7 @@ use crate::models::*;
 #[derive(Parser)]
 #[command(
     name= "ns",
-    after_help = format!("UTC now: {}", Utc::now().to_rfc3339())
+    after_help = format!("Local now: {}", Local::now().date_naive() /* .to_rfc3339() */)
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -14,23 +14,43 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
+pub enum Target {
+    #[command(alias = "h")]
+    Hope {
+        /// your target's id
+        #[arg(short, long)]
+        id: Option<i32>,
+    },
+    #[command(alias = "p")]
+    Process {
+        /// your target's id
+        #[arg(short, long)]
+        id: Option<i32>,
+    },
+    #[command(alias = "t")]
+    Task {
+        /// your target's id
+        #[arg(short, long)]
+        id: Option<i32>,
+    },
+    #[command(alias = "a")]
+    All,
+}
+
+#[derive(Subcommand)]
 pub enum Actions {
     /// show list of tasks
     #[command(alias = "ls")] // alias for list
     List {
-        /// show all data
-        #[arg(short, long)]
-        all: bool,
-        ///  includ done tasks
-        #[arg(short, long)]
-        include_done: bool,
+        #[command(subcommand)]
+        target: Target,
     },
     /// add hope
-    #[command(alias = "ah")]
+    #[command(alias = "ah",after_help = format!("Local now: {}", Local::now().date_naive() /* .to_rfc3339() */))]
     AddHope {
         #[arg(short, long)]
         title: String,
-        /// UTC
+        /// example 1995-08-01 2
         #[arg(short, long)]
         deadline: NaiveDate,
     },
@@ -63,10 +83,10 @@ pub enum Actions {
         #[arg(short, long, default_value_t = 1)]
         weight: i32,
         #[arg(long)]
-        hope_id: Option<i32>,
+        h_id: Option<i32>,
         /// related Process's ID
         #[arg(long)]
-        process_id: Option<i32>,
+        p_id: Option<i32>,
     },
     Start {
         /// your target task's ID
@@ -79,36 +99,23 @@ pub enum Actions {
         #[arg(short, long)]
         id: i32,
     },
-    /// delete hopes
-    #[command(alias = "dh")]
-    DeleteHope {
-        /// your target's ID
-        #[arg(short, long)]
-        id: i32,
-    },
-    /// delete process
-    #[command(alias = "dp")]
-    DeleteProcess {
-        /// your target's ID
-        #[arg(short, long)]
-        id: i32,
-    },
-    /// delete task
-    #[command(alias = "dt")]
-    DeleteTask {
-        /// your target task's ID
-        #[arg(short, long)]
-        id: i32,
+    /// delete data
+    #[command(alias = "d")]
+    Delete {
+        #[command(subcommand)]
+        target: Target,
     },
 }
 
 pub fn print_all_task(tree: Vec<HopeBlock>) {
+    println!("=== Task Tree ===");
     let print_related_tasks = |task: &Task| {
         println!("　　├─[Task] ID: {} -", task.id);
         println!("　　│  Title: {}", task.title);
         println!("　　│  Input: {}", task.input);
         println!("　　│  Action: {}", task.action);
-        println!("　　└  Output: {}", task.output);
+        println!("　　│  Output: {}", task.output);
+        println!("　　└  Weight: {}", task.weight);
     };
     let print_hope_block = |block: &HopeBlock| {
         println!("[Hope ID:{}]:", block.hope.id);
@@ -133,6 +140,14 @@ pub fn print_all_task(tree: Vec<HopeBlock>) {
     }
 }
 
+pub fn print_hope_list(hope_vec: Vec<Hope>) {
+    for hope in hope_vec {
+        println!("[Hope ID:{}]:", hope.id);
+        println!(" DeadLine: {}", hope.deadline);
+        println!(" TITLE: {}", hope.title);
+    }
+}
+
 pub fn print_standalone_tasks(tasks: Vec<Task>) {
     println!("=== Standalone Tasks ===");
     let print_standalone_task = |task: &Task| {
@@ -140,7 +155,8 @@ pub fn print_standalone_tasks(tasks: Vec<Task>) {
         println!("│  Title: {}", task.title);
         println!("│  Input: {}", task.input);
         println!("│  Action: {}", task.action);
-        println!("└  Output: {}", task.output);
+        println!("│  Output: {}", task.output);
+        println!("└  Weight: {}", task.weight);
     };
     for task in tasks.into_iter() {
         print_standalone_task(&task);
