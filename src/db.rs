@@ -1,12 +1,16 @@
 use chrono::prelude::*;
+use directories::ProjectDirs;
 use rusqlite::{Connection, Result};
+use std::fs;
 
 use super::models::*;
 
-// const TASK_STATE: [&str; 3] = ["Untouched", "Active", "Complete"];
-
 pub fn setup_db() -> Result<Connection> {
-    let conn = Connection::open("test.db")?;
+    let proj_dirs = ProjectDirs::from("ns_com", "ns_org", "nagarestar").expect("Path failed");
+    let data_dir = proj_dirs.data_dir();
+    fs::create_dir_all(data_dir).expect("faild to create dirctories");
+    let data_path = data_dir.join("data.db");
+    let conn = Connection::open(data_path)?;
     conn.execute("PRAGMA foreign_keys = ON;", [])?;
     conn.execute(
         "CREATE TABLE IF NOT EXISTS hopes (
@@ -43,7 +47,6 @@ pub fn setup_db() -> Result<Connection> {
         (),
     )?;
 
-    // weight: タスクの重さ、1~3の三段階、1時間で終わるかの自信度
     Ok(conn)
 }
 

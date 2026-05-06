@@ -2,9 +2,10 @@
 name = "nagarestar"
 version = "0.1.0"
 edition = "2024"
-description = "split a task and show have to do now !!!"
+description = ""
 
 [dependencies]
 clap = { version = "4.4", features = ["derive"] }
 rusqlite = { version = "0.38.0", features = ["chrono","bundled"] }
 chrono = {version = "0.4", features = ["serde"] }
+directories = "6.0.0"
