@@ -9,7 +9,11 @@ use cli::*;
 use db::*;
 
 fn main() {
-    let conn = match setup_db() {
+    if cfg!(debug_assertions) {
+        println!("!!= Now is debug build =!!");
+    }
+    let data_path = get_db_path();
+    let conn = match setup_db(data_path) {
         Ok(c) => c,
         Err(e) => {
             eprintln!("Error: {}", e);
@@ -97,10 +101,7 @@ fn main() {
         Actions::Delete { target } => match target {
             Target::Hope { id } => match id {
                 Some(value) => match delete_hope(&conn, value) {
-                    Ok(c) => {
-                        println!("Delete hope ID: {}", value);
-                        c
-                    }
+                    Ok(_c) => (),
                     Err(e) => {
                         eprintln!("Error: {}", e);
                     }
@@ -109,10 +110,7 @@ fn main() {
             },
             Target::Process { id } => match id {
                 Some(value) => match delete_process(&conn, value) {
-                    Ok(c) => {
-                        println!("Delete process ID: {}", value);
-                        c
-                    }
+                    Ok(_c) => (),
                     Err(e) => {
                         eprintln!("Error: {}", e);
                     }
@@ -121,10 +119,7 @@ fn main() {
             },
             Target::Task { id } => match id {
                 Some(value) => match delete_task(&conn, value) {
-                    Ok(c) => {
-                        println!("Deleted task ID: {}", value);
-                        c
-                    }
+                    Ok(_c) => (),
                     Err(e) => {
                         eprintln!("Error: {}", e);
                     }

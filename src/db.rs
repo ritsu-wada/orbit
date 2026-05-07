@@ -1,15 +1,26 @@
 use chrono::prelude::*;
-use directories::ProjectDirs;
 use rusqlite::{Connection, Result};
-use std::fs;
+use std::path::PathBuf;
 
 use super::models::*;
 
-pub fn setup_db() -> Result<Connection> {
-    let proj_dirs = ProjectDirs::from("ns_com", "ns_org", "nagarestar").expect("Path failed");
-    let data_dir = proj_dirs.data_dir();
-    fs::create_dir_all(data_dir).expect("faild to create dirctories");
-    let data_path = data_dir.join("data.db");
+pub fn get_db_path() -> PathBuf {
+    #[cfg(not(debug_assertions))]
+    {
+        use {directories::ProjectDirs, std::fs};
+
+        let proj_dirs = ProjectDirs::from("ns_com", "ns_org", "nagarestar").expect("Path failed");
+        let data_dir = proj_dirs.data_dir();
+        fs::create_dir_all(data_dir).expect("faild to create dirctories");
+        data_dir.join("data.db")
+    }
+    #[cfg(debug_assertions)]
+    {
+        PathBuf::from("test.db")
+    }
+}
+
+pub fn setup_db(data_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(data_path)?;
     conn.execute("PRAGMA foreign_keys = ON;", [])?;
     conn.execute(
