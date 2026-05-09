@@ -107,6 +107,21 @@ pub enum Actions {
     },
 }
 
+pub fn print_hope_list(hope_vec: Vec<Hope>) {
+    for hope in hope_vec {
+        println!("[Hope ID:{}]:", hope.id);
+        println!(" DeadLine: {}", hope.deadline);
+        println!(" TITLE: {}", hope.title);
+    }
+}
+
+// pub fn print_one_hope(hope_block: HopeBlock) {
+//     let hope = hope_block.hope;
+//     println!("[Hope ID: {} Deadline: {}]", hope.id, hope.deadline);
+//     println!(" Title: {}", hope.title);
+
+// }
+
 pub fn print_all_task(tree: Vec<HopeBlock>) {
     println!("=== Task Tree ===");
     let print_related_tasks = |task: &Task| {
@@ -137,14 +152,6 @@ pub fn print_all_task(tree: Vec<HopeBlock>) {
         for task in block.tasks {
             print_related_tasks(&task);
         }
-    }
-}
-
-pub fn print_hope_list(hope_vec: Vec<Hope>) {
-    for hope in hope_vec {
-        println!("[Hope ID:{}]:", hope.id);
-        println!(" DeadLine: {}", hope.deadline);
-        println!(" TITLE: {}", hope.title);
     }
 }
 

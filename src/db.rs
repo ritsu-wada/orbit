@@ -125,9 +125,7 @@ pub fn get_process(conn: &Connection) -> Result<Vec<Process>> {
             hope_id: row.get(2)?,
         })
     })?;
-
     let processes: Result<Vec<Process>> = process_iter.collect();
-
     processes
 }
 
@@ -140,9 +138,7 @@ pub fn get_hopes(conn: &Connection) -> Result<Vec<Hope>> {
             deadline: row.get(2)?,
         })
     })?;
-
     let hopes: Result<Vec<Hope>> = hope_iter.collect();
-
     hopes
 }
 

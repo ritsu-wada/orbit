@@ -15,6 +15,10 @@ use super::models::*;
 //     todays_task
 // }
 
+pub fn get_single_hope(id: i32, tree: Vec<HopeBlock>) -> Vec<HopeBlock> {
+    tree.into_iter().filter(|t| t.hope.id == id).collect()
+}
+
 pub fn eliminate_done(tree: &mut Vec<HopeBlock>) {
     for hope_block in tree.into_iter() {
         hope_block.tasks.retain(|t| !t.is_done);
