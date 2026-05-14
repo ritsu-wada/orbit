@@ -36,7 +36,7 @@ pub fn setup_db(data_path: PathBuf) -> Result<Connection> {
         "CREATE TABLE IF NOT EXISTS processes (
             id INTEGER PRIMARY KEY,
             title TEXT NOT NULL,
-            hope_id INTEGER,
+            hope_id INTEGER NOT NULL,
             FOREIGN KEY (hope_id) REFERENCES hopes(id) ON DELETE CASCADE
         )",
         (),
@@ -50,10 +50,19 @@ pub fn setup_db(data_path: PathBuf) -> Result<Connection> {
             action TEXT NOT NULL,
             output TEXT NOT NULL,
             weight INTEGER NOT NULL, 
+            process_id INTEGER NOT NULL,
             is_done BOOLEAN NOT NULL DEFAULT 0,
-            hope_id INTEGER,
-            process_id INTEGER,
             FOREIGN KEY (process_id) REFERENCES processes(id) ON DELETE CASCADE
+        )",
+        (),
+    )?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS routines (
+            id INTEGER PRIMARY KEY,
+            title TEXT NOT NULL,
+            weight INTEGER NOT NULL,
+            positon INTEGER NOT NULL,
         )",
         (),
     )?;
@@ -84,13 +93,12 @@ pub fn add_task(
     action: String,
     output: String,
     weight: i32,
-    hope_id: Option<i32>,
     process_id: Option<i32>,
 ) -> Result<()> {
     // 静的ステークホルダー、配列化タプルを渡すことができる
     conn.execute(
-        "INSERT INTO tasks (title, input, action, output, weight, hope_id, process_id) VALUES (?1,?2,?3,?4,?5,?6,?7)",
-        (title, input, action, output, weight, hope_id, process_id),
+        "INSERT INTO tasks (title, input, action, output, weight, process_id) VALUES (?1,?2,?3,?4,?5,?6,?7)",
+        (title, input, action, output, weight,  process_id),
     )?;
     Ok(())
 }
@@ -107,9 +115,8 @@ pub fn get_tasks(conn: &Connection) -> Result<Vec<Task>> {
             action: row.get(3)?,
             output: row.get(4)?,
             weight: row.get(5)?,
-            is_done: row.get(6)?,
-            hope_id: row.get(7)?,
-            process_id: row.get(8)?,
+            process_id: row.get(6)?,
+            is_done: row.get(7)?,
         })
     })?;
     let tasks: Result<Vec<Task>> = task_iter.collect();

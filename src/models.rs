@@ -22,16 +22,14 @@ pub struct Task {
     pub action: String,
     pub output: String,
     pub weight: i32,
-    pub is_done: bool,
-    pub hope_id: Option<i32>,
     pub process_id: Option<i32>,
+    pub is_done: bool,
 }
 
 #[derive(Clone)]
 pub struct HopeBlock {
     pub hope: Hope,
     pub process: Vec<ProcessBlock>,
-    pub tasks: Vec<Task>,
 }
 
 #[derive(Clone)]

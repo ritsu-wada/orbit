@@ -69,10 +69,9 @@ fn main() {
             action,
             output,
             weight,
-            h_id,
-            p_id,
+            process_id,
         } => {
-            if let Err(e) = add_task(&conn, title, input, action, output, weight, h_id, p_id) {
+            if let Err(e) = add_task(&conn, title, input, action, output, weight, process_id) {
                 println!("Error: {}", e);
             }
         }

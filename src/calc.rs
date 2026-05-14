@@ -21,7 +21,6 @@ pub fn get_single_hope(id: i32, tree: Vec<HopeBlock>) -> Vec<HopeBlock> {
 
 pub fn eliminate_done(tree: &mut Vec<HopeBlock>) {
     for hope_block in tree.into_iter() {
-        hope_block.tasks.retain(|t| !t.is_done);
         for process_block in &mut hope_block.process {
             process_block.tasks.retain(|t| !t.is_done);
         }
@@ -76,16 +75,9 @@ pub fn make_tree(conn: &Connection) -> Vec<HopeBlock> {
                 })
                 .collect();
 
-            let related_tasks: Vec<Task> = tasks
-                .iter()
-                .filter(|t| t.hope_id == Some(hope.id))
-                .cloned()
-                .collect();
-
             HopeBlock {
                 hope,
                 process: process_block,
-                tasks: related_tasks,
             }
         })
         .collect();
@@ -101,8 +93,5 @@ pub fn get_standalone_tasks(conn: &Connection) -> Vec<Task> {
             Vec::new()
         }
     };
-    tasks
-        .into_iter()
-        .filter(|t| t.hope_id == None && t.process_id == None)
-        .collect()
+    tasks.into_iter().filter(|t| t.process_id == None).collect()
 }

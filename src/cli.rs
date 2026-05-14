@@ -82,11 +82,9 @@ pub enum Actions {
         /// 1: 確実に1時間で終わる 2: 1時間で終わるだろうが不安 3: 未知の作業
         #[arg(short, long, default_value_t = 1)]
         weight: i32,
-        #[arg(long)]
-        h_id: Option<i32>,
         /// related Process's ID
-        #[arg(long)]
-        p_id: Option<i32>,
+        #[arg(short, long)]
+        process_id: Option<i32>,
     },
     Start {
         /// your target task's ID
@@ -148,9 +146,6 @@ pub fn print_all_task(tree: Vec<HopeBlock>) {
             for task in process_block.tasks {
                 print_related_tasks(&task);
             }
-        }
-        for task in block.tasks {
-            print_related_tasks(&task);
         }
     }
 }
